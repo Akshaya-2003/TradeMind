@@ -3,8 +3,8 @@ import https from "https";
 
 // Configuration
 const CONFIG = {
-  apiKey: "fyicz55abxw00mfd",
-  accessToken: "DmOs6vslqtLZaVv4vIwuGWAQtFtmsZJg", // UPDATE THIS WITH FRESH TOKEN
+  apiKey: "Add your apikey",
+  accessToken: "add your access token", // UPDATE THIS WITH FRESH TOKEN
   timeout: 15000,
   retryAttempts: 2
 };
