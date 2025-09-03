@@ -1,32 +1,60 @@
+// Force disable SSL verification
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+
 import { KiteConnect } from "kiteconnect";
 import https from "https";
 
+// TODO: Update these credentials with fresh values
 const apiKey = "fyicz55abxw00mfd";
-let accessToken = "ce6o4ZBLXeyj8GHOJyK1F17fDilT7mgu";
+let accessToken = "DmOs6vslqtLZaVv4vIwuGWAQtFtmsZJg";
 
-
-// Create an HTTPS agent that ignores self-signed certs
-const agent = new https.Agent({
-  rejectUnauthorized: false,
+// Create KiteConnect instance
+const kc = new KiteConnect({ 
+  api_key: apiKey,
+  timeout: 7000
 });
 
-const kc = new KiteConnect({ api_key: apiKey });
+kc.setAccessToken(accessToken);
 
-console.log(kc.getLoginURL())
+// Configure with SSL bypass
+(kc as any).request_opts = {
+  agent: new https.Agent({
+    rejectUnauthorized: false,
+    secureProtocol: 'TLSv1_2_method',
+    checkServerIdentity: () => undefined
+  }),
+  timeout: 15000
+};
 
-export async function placeOrder(tradingsymbol: string, quantity: number, type: "BUY" | "SELL") {
+export async function placeOrder(
+  tradingsymbol: string,
+  quantity: number,
+  type: "BUY" | "SELL"
+) {
   try {
-    kc.setAccessToken(accessToken);
-    const profile = await kc.placeOrder("regular", {
+    const order = await kc.placeOrder("regular", {
       exchange: "NSE",
       tradingsymbol,
       transaction_type: type,
       quantity,
-      product: "CNC", //INTRADAY OR LONG-TERM
-      order_type: "MARKET"
+      product: "CNC",
+      order_type: "MARKET",
     });
-  } catch (err) {
-    console.error(err);
+    
+    return order;
+    
+  } catch (err: any) {
+    // Enhanced error messages without console pollution
+    if (err.message && err.message.includes('api_key')) {
+      throw new Error("Authentication failed - please check your API key and access token");
+    } else if (err.message && err.message.includes('access_token')) {
+      throw new Error("Access token expired - please generate a new access token");
+    } else if (err.error_type === 'TokenException') {
+      throw new Error("Token error - your access token may have expired");
+    } else if (err.error_type === 'PermissionException') {
+      throw new Error("Permission denied - check your API permissions");
+    } else {
+      throw new Error(`Trading error: ${err.message || 'Unknown error occurred'}`);
+    }
   }
 }
-
