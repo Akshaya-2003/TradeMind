@@ -1,18 +1,15 @@
-// Force disable SSL verification at the process level
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
-
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { placeOrder } from "./trade";
+import { placeOrder, healthCheck } from "./trade";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-// Create an MCP server
+// Create MCP server
 const server = new McpServer({
-  name: "demo-server",
+  name: "secure-trading-server",
   version: "1.0.0"
 });
 
-// Add an addition tool
+// Math tools
 server.tool("add",
   { a: z.number(), b: z.number() },
   async ({ a, b }) => ({
@@ -20,9 +17,8 @@ server.tool("add",
   })
 );
 
-// Add a factorial tool
 server.tool("factorial",
-  {a: z.number() },
+  { a: z.number() },
   async ({ a }) => {
     let answer = 1;
     for (let i = 2; i <= a; i++) {
@@ -34,40 +30,80 @@ server.tool("factorial",
   }
 );
 
-// Add a buy stock tool
+// Trading tools
 server.tool("buy-stock",
-  { stock: z.string(), quantity: z.number() },
+  { 
+    stock: z.string().min(1).max(20),
+    quantity: z.number().positive().int()
+  },
   async ({ stock, quantity }) => {
     try {
       const order = await placeOrder(stock, quantity, "BUY");
       return {
-        content: [{ type: "text", text: `✅ Buy order placed successfully. Order ID: ${order.order_id}` }]
+        content: [{ 
+          type: "text", 
+          text: `✅ Buy order placed successfully!\nStock: ${stock}\nQuantity: ${quantity}\nOrder ID: ${order.order_id}` 
+        }]
       };
     } catch (err: any) {
       return {
-        content: [{ type: "text", text: `❌ Buy order failed: ${err.message || err}` }]
+        content: [{ 
+          type: "text", 
+          text: `❌ Buy order failed: ${err.message}` 
+        }]
       };
     }
   }
 );
 
-// Add a sell stock tool
 server.tool("sell-stock",
-  {stock: z.string(), quantity: z.number()},
-  async ({stock, quantity}) => {
+  { 
+    stock: z.string().min(1).max(20),
+    quantity: z.number().positive().int()
+  },
+  async ({ stock, quantity }) => {
     try {
       const order = await placeOrder(stock, quantity, "SELL");
       return {
-        content: [{ type: "text", text: `✅ Sell order placed successfully. Order ID: ${order.order_id}` }]
+        content: [{ 
+          type: "text", 
+          text: `✅ Sell order placed successfully!\nStock: ${stock}\nQuantity: ${quantity}\nOrder ID: ${order.order_id}` 
+        }]
       };
     } catch (err: any) {
       return {
-        content: [{ type: "text", text: `❌ Sell order failed: ${err.message || err}` }]
+        content: [{ 
+          type: "text", 
+          text: `❌ Sell order failed: ${err.message}` 
+        }]
       };
     }
   }
 );
 
-// Start receiving messages on stdin and sending messages on stdout
+// Health check tool (for debugging)
+server.tool("trading-status",
+  {},
+  async () => {
+    try {
+      const status = await healthCheck();
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Trading System Status: ${status.status.toUpperCase()}\n${status.message}` 
+        }]
+      };
+    } catch (err: any) {
+      return {
+        content: [{ 
+          type: "text", 
+          text: `❌ Status check failed: ${err.message}` 
+        }]
+      };
+    }
+  }
+);
+
+// Start server
 const transport = new StdioServerTransport();
 await server.connect(transport);

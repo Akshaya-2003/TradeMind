@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+      "trade": {
+        "command": "/Users/inintr00397/.bun/bin/bun",
+        "args": [
+          "/Users/inintr00397/Desktop/kite/index.ts"
+        ],
+        "env": {
+          "NODE_ENV": "development",
+          "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+        }
+      }
+    }
+  }
