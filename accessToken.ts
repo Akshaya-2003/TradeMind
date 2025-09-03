@@ -1,10 +1,10 @@
 import { KiteConnect } from "kiteconnect";
 import https from "https";
 
-const apiKey = "fyicz55abxw00mfd";
-const apiSecret = "ihg4uvdvk2cw2xo0uauag3ps7enyo885";
-const requestToken = "JTi6qMxBRO14D06q5eWiaCQVJ5kVztBi";
-let accessToken = "";
+const apiKey = "Add your apikey";
+const apiSecret = "Add your apiSecret";
+const requestToken = "Add your requestToken";
+let accessToken = "Add your accessToken";
 
 // Allow self-signed certificates (Bun/Node compatible)
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
